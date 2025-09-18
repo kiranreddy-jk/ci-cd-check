@@ -36,3 +36,5 @@ jobs:
         run: |
           echo "🔍 Scanning for secrets..."
           gitleaks detect --source . --no-git -v
+
+
