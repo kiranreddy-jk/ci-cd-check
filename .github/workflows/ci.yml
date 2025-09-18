@@ -1,9 +1,10 @@
-name: CI Pipeline
+name: Secret Scan
 
 on:
   push:
     branches:
-      - '**'
+      - main
+      - test/secret-detect
   pull_request:
     branches:
       - main
@@ -11,30 +12,20 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    steps:
-      # Checkout code
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # Important for scanning entire history if needed
 
-      # Basic test step (so you can see pipeline passing/failing)
-      - name: Run sample build check
-        run: |
-          echo "✅ CI pipeline running for branch: $GITHUB_REF"
-          echo "Simulating build/test step"
-      
-      # Install Gitleaks for secret scanning
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
       - name: Install Gitleaks
         run: |
-          wget https://github.com/gitleaks/gitleaks/releases/latest/download/gitleaks-linux-amd64.tar.gz
-          tar -xvzf gitleaks-linux-amd64.tar.gz
+          curl -s https://api.github.com/repos/gitleaks/gitleaks/releases/latest \
+          | grep "browser_download_url.*linux-amd64.tar.gz" \
+          | cut -d '"' -f 4 \
+          | wget -qi -
+          tar -xzf gitleaks-*-linux-amd64.tar.gz
           sudo mv gitleaks /usr/local/bin/
 
-      # Run Gitleaks scan
       - name: Run Gitleaks secret scan
         run: |
-          echo "🔍 Scanning for secrets..."
           gitleaks detect --source . --no-git -v
-
-
